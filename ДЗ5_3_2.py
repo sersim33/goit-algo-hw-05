@@ -44,40 +44,46 @@ def kmp_search(main_string, pattern):
 
     return -1  # якщо підрядок не знайдено
 
-# URL-адреса файлу на Google Drive
-# url = "https://drive.google.com/uc?id=18_R5vEQ3eDuy2VdV3K5Lu-R-B-adxXZh"
+def get_text(url):
+    """
+    Отримує текстовий вміст за URL-адресою.
+    """
+    response = requests.get(url)
+    try:
+        response.raise_for_status()
+        # print(response.text)
+        return response.text
+    except requests.exceptions.RequestException as e:
+        # print("Error fetching content:", e)
+        return ""
 
-# (стаття 2)
-url = "https://drive.google.com/uc?id=13hSt4JkJc11nckZZz2yoFHYL89a4XkMZ"
-
-# Виконуємо запит для отримання вмісту файлу
-response = requests.get(url)
-
-# Перевіряємо, чи був успішний запит
-if response.status_code == 200:
-    # Отримуємо вміст файлу
-    code = response.text
-
-main_string = code
-# pattern = "У лінійного пошуку немає передумов до стану структури даних"
-# pattern = "Цього рядка не існує - Це підхід до хешування рядків, коли кожен символ рядка розглядається як коефіцієнт полінома"
-
-
-# Для статті 2
-# pattern = "Структура B+ tree показала результати, близькі до хеш-таблиці"
-# pattern = "Цього рядка не існує - Визначено найшвидший алгоритм для кожного з двох текстів"
-
-cases = [["У лінійного пошуку немає передумов до стану структури даних", "Цього рядка не існує - Це підхід до хешування рядків, коли кожен символ рядка розглядається як коефіцієнт полінома"], ["СУБД типу NoSQL можуть бути реалізовані різними методами", "Цього рядка не існує - Визначено найшвидший алгоритм для кожного з двох текстів"]]
+def measure_time(func, text, substring, iterations=100):
+    """
+    Вимірює час виконання функції середньо за вказану кількість ітерацій.
+    """
+    setup = f'from __main__ import {func.__name__}; text = """{text}"""; substring = """{substring}"""'
+    stmt = f'{func.__name__}(text, substring)'
+    time_taken = timeit.timeit(stmt=stmt, setup=setup, number=iterations)
+    print(f"Average time taken for {func.__name__}: {time_taken} seconds")
 
 
-for case in cases:
-    for pattern in case:
-        position = kmp_search(main_string, pattern)
-        if position != -1:
-            print(f"Substring found at index {position}")
-        else:
-            print("Substring not found")
+url1 = "https://drive.google.com/uc?id=18_R5vEQ3eDuy2VdV3K5Lu-R-B-adxXZh"  # Стаття 1
+url2 = "https://drive.google.com/uc?id=13hSt4JkJc11nckZZz2yoFHYL89a4XkMZ"  # Стаття 2
 
-        time_taken = timeit.timeit(lambda: position)
+main_text1 = get_text(url1)
+main_text2 = get_text(url2)
 
-        print("Time taken:", time_taken, "seconds")
+# Підрядки для пошуку
+substring_1_t = "Автори публiкації" 
+substring_1_f = "Цього рядка не існує - Це підхід до хешування рядків, коли кожен символ рядка розглядається як коефіцієнт полінома"
+substring_2_t = "СУБД типу NoSQL можуть бути реалізовані різними методами"
+substring_2_f = "Цього рядка не існує - Визначено найшвидший алгоритм для кожного з двох текстів"
+
+# Список варіантів для аналізу
+cases = [(main_text1, [substring_1_t, substring_1_f]), (main_text2, [substring_2_t, substring_2_f])]
+
+# Вимірюємо час виконання для кожної функції та кожного варіанту
+for function in [kmp_search]:
+    for article in cases:
+        for substring in article[1]:
+            measure_time(function, article[0], substring)
